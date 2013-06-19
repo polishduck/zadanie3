@@ -2,6 +2,7 @@ package app.view;
 
 
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.Image;
 
 import java.awt.event.ActionEvent;
@@ -28,6 +29,9 @@ import javax.swing.JMenuItem;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.KeyStroke;
+import javax.swing.ListSelectionModel;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import javax.imageio.*;
 
 import org.dcm4che2.data.DicomElement;
@@ -38,7 +42,7 @@ import org.dcm4che2.util.CloseUtils;
 import app.controller.*;
 import app.model.*;
 
-public class mainView extends JFrame{
+public class mainView extends JFrame implements ListSelectionListener {
 	
 	private JList list;
 	private String[] imageList = {"/home/patryk/Desktop/fotos/1.jpg", "/home/patryk/Desktop/fotos/2.png", "/home/patryk/Desktop/fotos/3.jpg", "/home/patryk/Desktop/fotos/4.jpg" };
@@ -86,6 +90,11 @@ public class mainView extends JFrame{
 		menu.add(menuItem2);
 		setJMenuBar(menuBar);
 
+		list = new JList(imageList);
+        list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        list.setSelectedIndex(0);
+        list.addListSelectionListener(this);
+		
 		
 		Image image = new ImageIcon("/home/patryk/Desktop/final.jpg").getImage();
 		JLabel imagePanel = new JLabel(new ImageIcon(image));
@@ -95,11 +104,20 @@ public class mainView extends JFrame{
 		splitPane.setOneTouchExpandable(true);
 		splitPane.setDividerLocation(150);
 		
+        Dimension minimumSize = new Dimension(100, 50);
+        listScrollPane.setMinimumSize(minimumSize);
+        imagePanel.setMinimumSize(minimumSize);
+ 
+        //Provide a preferred size for the split pane.
+        splitPane.setPreferredSize(new Dimension(400, 200));
+    
+		
+		
 	//	listScrollPane.setVisible(true);
 	//	imagePanel.setVisible(true);
 		add(splitPane);
-		add(listScrollPane);
-		add(imagePanel);
+//		add(listScrollPane);
+	//	add(imagePanel);
 
 		
 		
@@ -142,5 +160,13 @@ public class mainView extends JFrame{
 			}
 */			
 	}
+
+	@Override
+	public void valueChanged(ListSelectionEvent e) {
+		System.out.println("selected");
+		
+	}
+	
+
 
 }
