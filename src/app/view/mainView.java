@@ -3,7 +3,6 @@ package app.view;
 
 import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.Image;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -16,6 +15,8 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.URL;
+import java.util.Date;
 import java.util.Iterator;
 
 import javax.swing.ImageIcon;
@@ -36,6 +37,7 @@ import javax.imageio.*;
 
 import org.dcm4che2.data.DicomElement;
 import org.dcm4che2.data.DicomObject;
+import org.dcm4che2.data.Tag;
 import org.dcm4che2.io.DicomInputStream;
 import org.dcm4che2.util.CloseUtils;
 
@@ -46,6 +48,12 @@ public class mainView extends JFrame implements ListSelectionListener {
 	
 	private JList list;
 	private String[] imageList = {"/home/patryk/Desktop/fotos/1.jpg", "/home/patryk/Desktop/fotos/2.png", "/home/patryk/Desktop/fotos/3.jpg", "/home/patryk/Desktop/fotos/4.jpg" };
+	public JLabel imagePanel; 
+	public JSplitPane splitPane;
+	public JScrollPane listScrollPane;
+	public DicomInputStream dis = null;
+	public DicomObject dcm = null;
+	public File file;
 	
 	public mainView() throws IOException{
 		setTitle("Przegladarka DICOM");
@@ -53,13 +61,11 @@ public class mainView extends JFrame implements ListSelectionListener {
 		setSize(800,600);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-		JSplitPane splitPane;
 		JMenuBar menuBar=new JMenuBar();
 		JMenu menu = new JMenu("Plik");
 		menuBar.add(menu);
 		
-		File file = null;
-		
+	
 		final JFileChooser fc = new JFileChooser();
 		fc.addChoosableFileFilter(new DicomFilter());
 		fc.setAcceptAllFileFilterUsed(false);
@@ -72,11 +78,57 @@ public class mainView extends JFrame implements ListSelectionListener {
 			public void actionPerformed(ActionEvent e) {
 				int returnVal = fc.showOpenDialog(mainView.this);
 				if (returnVal == JFileChooser.APPROVE_OPTION) {
-					File file;
 					file = fc.getSelectedFile();
 					System.out.print("Opened file " + file.getAbsolutePath() + "\n");
 					
 				}
+				
+				try {
+					dis = new DicomInputStream(file);
+					dcm = dis.readDicomObject();
+				} catch (IOException e1) {
+					// ex
+				} finally {
+					if (dis != null) {
+						CloseUtils.safeClose(dis);
+					}
+					
+				}
+				Iterator<DicomElement> iter = dcm.datasetIterator();
+				while ( iter.hasNext() ) {
+					DicomElement tag = iter.next();
+					// print dicom tag
+					System.out.println( tag );
+					}
+				String name = dcm.getString( Tag.PatientName);
+				System.out.println("Imie i Nazwisko: " + name);
+				
+				Date date_birth = dcm.getDate(Tag.PatientBirthDate);
+				System.out.println("Urodzony: " + date_birth);
+				
+				
+				String study_des = dcm.getString(Tag.StudyDescription);			
+				System.out.println("Badanie: " + study_des);
+				
+				
+				String series_des = dcm.getString(Tag.SeriesDescription);
+				System.out.println("Seria: " + series_des);
+				
+				Date date_des = dcm.getDate(Tag.StudyDate);
+				System.out.println("Data badania: " + date_des);
+								
+				String study_type = dcm.getString(Tag.Modality);
+				System.out.println("Rodzaj Badanie: " + study_type);
+				
+				String siu = dcm.getInt(Tag.SOPInstanceUID);
+				System.out.println("Siu: " + siu);
+				
+				//DicomElement image1 = dcm.get(Tag.ReferencedImageSequence); //getObject(Tag.ReferencedImageSequence);
+			//	displayTag.chooserTagDicom( );
+				//DicomObject = dcm. // Bytes(Tag.ReferencedImageSequence);
+			//	System.out.println("Lokalizacja: " + image1.length());
+				
+
 			}
 		});
 		menuItem2.setAccelerator(KeyStroke.getKeyStroke( KeyEvent.VK_X, ActionEvent.CTRL_MASK));
@@ -94,11 +146,9 @@ public class mainView extends JFrame implements ListSelectionListener {
         list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         list.setSelectedIndex(0);
         list.addListSelectionListener(this);
-		
-		
-		Image image = new ImageIcon("/home/patryk/Desktop/final.jpg").getImage();
-		JLabel imagePanel = new JLabel(new ImageIcon(image));
-		JScrollPane listScrollPane = new JScrollPane(list);
+        
+        imagePanel = new JLabel();
+		listScrollPane = new JScrollPane(list);
 		
 		splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, listScrollPane , imagePanel);
 		splitPane.setOneTouchExpandable(true);
@@ -111,36 +161,11 @@ public class mainView extends JFrame implements ListSelectionListener {
         //Provide a preferred size for the split pane.
         splitPane.setPreferredSize(new Dimension(400, 200));
     
-		
-		
-	//	listScrollPane.setVisible(true);
-	//	imagePanel.setVisible(true);
-		add(splitPane);
-//		add(listScrollPane);
-	//	add(imagePanel);
 
-		
-		
+		add(splitPane);
 		
 		setVisible(true);
-/*		
-		BufferedImage image = ImageIO.read(file);
-		System.out.println(image);
-		
-		JLabel imagePanel = new JLabel(new ImageIcon(image));
-//		
-
-//		splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, imagePanel, imagePanel);
-//		splitPane.setOneTouchExpandable(true);
-//		splitPane.setDividerLocation(150);
-		
-		
-		
-//		add(splitPane);
-		add(imagePanel);
-		
-		DicomInputStream dis = null;
-		DicomObject dcm = null;
+/*
 		try {
 			dis = new DicomInputStream(file);
 			dcm = dis.readDicomObject();
@@ -158,13 +183,27 @@ public class mainView extends JFrame implements ListSelectionListener {
 			// print dicom tag
 			System.out.println( tag );
 			}
-*/			
+			
+	*/
+	
 	}
 
 	@Override
 	public void valueChanged(ListSelectionEvent e) {
-		System.out.println("selected");
-		
+		JList list = (JList)e.getSource();
+		System.out.println(imageList[list.getSelectedIndex()]);
+		ImageIcon icon = new ImageIcon(imageList[list.getSelectedIndex()]);
+/*		BufferedImage image = null;
+		try {
+			image = ImageIO.read(new File("/home/patryk/aaaaaaa/T1/0001.dcm"));
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		ImageIcon icon = new ImageIcon(image);
+*/
+		imagePanel.setIcon(icon);
+
 	}
 	
 
