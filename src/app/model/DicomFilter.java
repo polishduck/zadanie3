@@ -11,9 +11,7 @@ public class DicomFilter extends FileFilter {
         if (f.isDirectory()) {
             return true;
         }
-
-        
-        
+             
         String extension = getExtension(f);
         if (extension != null) {
             if (extension.equals("dcm")) {
@@ -28,7 +26,7 @@ public class DicomFilter extends FileFilter {
 
     //The description of this filter
     public String getDescription() {
-        return "DICOM FILES";
+        return "Dicom Files";
     }
     
     public String getExtension(File f) {
