@@ -30,7 +30,12 @@ import javax.swing.KeyStroke;
 import javax.swing.ListSelectionModel;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+import javax.swing.event.TreeSelectionEvent;
+import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.TreeModel;
+import javax.swing.tree.TreeSelectionModel;
 import javax.imageio.*;
 
 import org.dcm4che2.data.DicomElement;
@@ -39,24 +44,15 @@ import org.dcm4che2.data.Tag;
 import org.dcm4che2.io.DicomInputStream;
 import org.dcm4che2.util.CloseUtils;
 
+import app.controller.mainController;
 import app.model.*;
 
-public class mainView extends JFrame implements ListSelectionListener {
+public class mainView extends JFrame implements TreeSelectionListener {
 	
-
-	private String[] imageList= {"1","2"};
-	/*
-	private String[] imageList = {	"/home/jrduck/aaaa/T1/0001.dcm", 
-									"/home/jrduck/aaaa/T1/0002.dcm", 
-									"/home/jrduck/aaaa/T1/0003.dcm", 
-									"/home/jrduck/aaaa/T1/0004.dcm", 
-									"/home/jrduck/aaaa/T1/0005.dcm", 
-									"/home/jrduck/aaaa/T1/0006.dcm", 
-									"/home/jrduck/aaaa/T1/0007.dcm", 
-									"/home/jrduck/aaaa/T1/0008.dcm", 
-									"/home/jrduck/aaaa/T1/0009.dcm" 
-		}; 
-	*/
+	private JTree tree=null;
+	private JTree tree2=null;
+	private DefaultTreeModel treeModel ;
+	//private String[] imageList= {"1","2"};
 	public JLabel imagePanel; 
 	public JSplitPane splitPane;
 	public JScrollPane listScrollPane;
@@ -64,8 +60,9 @@ public class mainView extends JFrame implements ListSelectionListener {
 	public DicomObject dcm = null;
 	public File file;
 	public File[] files;
+	public DefaultMutableTreeNode top = new DefaultMutableTreeNode("pacient");
 	
-	public mainView() throws IOException{
+	public mainView(mainController mController) throws IOException{
 		setTitle("Przegladarka DICOM");
 		setBackground(Color.white);
 		setSize(800,600);
@@ -83,6 +80,7 @@ public class mainView extends JFrame implements ListSelectionListener {
 		JMenuItem menuItem1 = new JMenuItem("Otworz");
 		JMenuItem menuItem2 = new JMenuItem("Zamknij");
 		
+		//menuItem1.addActionListener(mController);
 		menuItem1.addActionListener( new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -109,51 +107,29 @@ public class mainView extends JFrame implements ListSelectionListener {
 					Iterator<DicomElement> iter = dcm.datasetIterator();
 					while ( iter.hasNext() ) {
 						DicomElement tag = iter.next();
-						// print dicom tag
+				// print dicom tag
 				//		System.out.println( tag );
 						}
 					
-				//	showDetails(dcm);
-					imageList = createTree(files);
-					drukujListe(imageList);
-				//	listScrollPane.updateUI();
-				//	splitPane.repaint();
-					setVisible(true);
-					createUI(imageList);
-					add(splitPane);
-			        setVisible(true);
+			//		showDetails(dcm);
+					updateUI(files);
 				}
-				
-				
-				
 			}
-
-
-
-
 		});
 		menuItem2.setAccelerator(KeyStroke.getKeyStroke( KeyEvent.VK_X, ActionEvent.CTRL_MASK));
-		menuItem2.addActionListener( new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				System.exit(0);
-			}
-		});
+		menuItem2.addActionListener(mController);
+
 		menu.add(menuItem1);
 		menu.add(menuItem2);
 		setJMenuBar(menuBar);
 
 //		imageList = createTree(files);
 		
-		createUI(imageList);
+		createUI();
 		add(splitPane);
         setVisible(true);
-	
 	}
 
-
-
-	
 	public BufferedImage scaleImage(BufferedImage img, int width, int height,
 	        Color background) {
 	    int imgWidth = img.getWidth();
@@ -191,7 +167,7 @@ public class mainView extends JFrame implements ListSelectionListener {
 		
 		String study_des = dcm.getString(Tag.StudyDescription);			
 		System.out.println("Badanie: " + study_des);
-							
+        
 		String series_des = dcm.getString(Tag.SeriesDescription);
 		System.out.println("Seria: " + series_des);
 		
@@ -221,188 +197,151 @@ public class mainView extends JFrame implements ListSelectionListener {
 		
 	}
 	
-	private String[] createTree(File[] files2) {
-		// TODO Auto-generated method stub
-		
-		System.out.print("Create TREE\n");
-		String [] tempLista = new String[files2.length];
-		for (int ii=0; ii<files2.length;ii++) {
-			
-			System.out.print("Opened file " + files2[ii].getName() + "\n");
-			tempLista[ii] = files2[ii].getName();
-		}
-		/*
-		String[] imageList = {	
-				"0001.dcm", 
-				"0002.dcm", 
-				"0003.dcm", 
-				"0004.dcm", 
-				"0005.dcm", 
-				"0006.dcm", 
-				"0007.dcm", 
-				"0008.dcm", 
-				"0009.dcm" 
-		}; 
-		*/
-		return tempLista;
-	}
-	
-	private void drukujListe(String[] imageList) {
+	private void createUI() {
 
-		for (int ii=0; ii<imageList.length;ii++) {
-			
-			System.out.print("Na liscie:" + imageList[ii] + "\n");
-		}
+		//DefaultMutableTreeNode top = new DefaultMutableTreeNode("pacient");
+		treeModel = new DefaultTreeModel(top);
+		tree = new JTree(treeModel);
 		
-	}
-	
-	
-	private void createUI(String[] imageList2) {
-		// TODO Auto-generated method stub
-		
-		DefaultMutableTreeNode top = new DefaultMutableTreeNode("Pacjent");
-		
-	    createNodes(top);
-	    JTree tree = new JTree(top);
-		
-		JList list;
-		list = new JList(imageList2);
-        list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        list.setSelectedIndex(0);
-//        list.addListSelectionListener(this);
-        list.addListSelectionListener(this);
-        
-        drukujListe(imageList);
-        
-        imagePanel = new JLabel();
+	    imagePanel = new JLabel();
 		//listScrollPane = new JScrollPane(list);
-        listScrollPane = new JScrollPane(tree);
-        
+	    listScrollPane = new JScrollPane(tree);
+	        
 		splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, listScrollPane , imagePanel);
 		splitPane.setOneTouchExpandable(true);
 		splitPane.setDividerLocation(150);
+			
+	    Dimension minimumSize = new Dimension(100, 50);
+	    listScrollPane.setMinimumSize(minimumSize);
+	    imagePanel.setMinimumSize(minimumSize);
+	 
+	    //Provide a preferred size for the split pane.
+	    splitPane.setPreferredSize(new Dimension(400, 200));
+	}
+
+	private void updateUI(File[] files2) {
+		//createTree(tree);
+		DefaultMutableTreeNode top1 = new DefaultMutableTreeNode("dziabie");
+		createNodes2(top1);
+		//treeModel.nodeChanged(top1);
+		treeModel.insertNodeInto(top1, top, 0);
+		tree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
+		tree.addTreeSelectionListener(this);
 		
-        Dimension minimumSize = new Dimension(100, 50);
-        listScrollPane.setMinimumSize(minimumSize);
-        imagePanel.setMinimumSize(minimumSize);
- 
-        //Provide a preferred size for the split pane.
-        splitPane.setPreferredSize(new Dimension(400, 200));
-        
-        
+	}
+	
+	private void createNodes2(DefaultMutableTreeNode top) {
 		
+		System.out.println("create node2\n");
+		// TODO Auto-generated method stub
+		DefaultMutableTreeNode study = null;
+	    DefaultMutableTreeNode series = null;
+	    DefaultMutableTreeNode img = null;
+	    
+	    study = new DefaultMutableTreeNode("*WRONG*head_3T_l_PA^brain_3T_l");
+	    top.add(study);
+	    
+	    series = new DefaultMutableTreeNode("*WRONG*t1_mpr_ns_sag");
+	    study.add(series);
+	    
+	    img = new DefaultMutableTreeNode("0001.dcm");
+	    series.add(img);
+	    
+	    img = new DefaultMutableTreeNode("0002.dcm");
+	    series.add(img);
+	    
+	    img = new DefaultMutableTreeNode("0003.dcm");
+	    series.add(img);
+	}
+	
+
+	private void createNodes(DefaultMutableTreeNode top, File[] files2) {
+		// TODO Auto-generated method stub
+		
+		for (int ii=0; ii<files2.length;ii++) {
+			
+			System.out.print("Create nodes Opened file " + files2[ii].getAbsolutePath() + "\n");
+			
+			try {
+				dis = new DicomInputStream(files2[ii]);
+				dcm = dis.readDicomObject();
+			} catch (IOException e1) {
+				// ex
+			} finally {
+				if (dis != null) {
+					CloseUtils.safeClose(dis);
+				}
+				
+			}
+
+	    DefaultMutableTreeNode study = null;
+	    DefaultMutableTreeNode series = null;
+	    DefaultMutableTreeNode img = null;
+	    
+	    study = new DefaultMutableTreeNode("*WRONG*head_3T_l_PA^brain_3T_l");
+	    top.add(study);
+	    
+	    series = new DefaultMutableTreeNode("*WRONG*t1_mpr_ns_sag");
+	    study.add(series);
+	    
+	    img = new DefaultMutableTreeNode("0001.dcm");
+	    series.add(img);
+	    
+	    img = new DefaultMutableTreeNode("0002.dcm");
+	    series.add(img);
+	    
+	    img = new DefaultMutableTreeNode("0003.dcm");
+	    series.add(img);
+		}
 	}
 
 	@Override
-	public void valueChanged(ListSelectionEvent e) {
-		
-		JList list = (JList)e.getSource();
-		System.out.println(imageList[list.getSelectedIndex()]);
-//		ImageIcon icon = new ImageIcon(imageList[list.getSelectedIndex()]);
-		BufferedImage image = null;
-		try {
-			image = ImageIO.read(new File("/home/jrduck/aaaa/T1/" + imageList[list.getSelectedIndex()]));
-		} catch (IOException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
-		
-		System.out.print("Opened file " + "/home/jrduck/aaaa/T1/" + imageList[list.getSelectedIndex()] + "\n");
-		
-		try {
-			dis = new DicomInputStream(new File("/home/jrduck/aaaa/T1/" + imageList[list.getSelectedIndex()]));
-			dcm = dis.readDicomObject();
-		} catch (IOException e1) {
-			// ex
-		} finally {
-			if (dis != null) {
-				CloseUtils.safeClose(dis);
+	public void valueChanged(TreeSelectionEvent e) {
+		// TODO Auto-generated method stub
+		DefaultMutableTreeNode node = (DefaultMutableTreeNode)tree.getLastSelectedPathComponent();
+		if (node == null) return;
+		if (node.isLeaf()) {
+			System.out.println("click na itemie:" + node.getUserObject().toString());
+			
+			BufferedImage image = null;
+			try {
+				image = ImageIO.read(new File("/home/patryk/aaaa/T1/" + node.getUserObject().toString()));
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
 			}
 			
+			System.out.print("Opened file " + "/home/patryk/aaaa/T1/" + node.getUserObject().toString() + "\n");
+			
+			try {
+				dis = new DicomInputStream(new File("/home/patryk/aaaa/T1/" + node.getUserObject().toString()));
+				dcm = dis.readDicomObject();
+			} catch (IOException e1) {
+				// ex
+			} finally {
+				if (dis != null) {
+					CloseUtils.safeClose(dis);
+				}
+				
+			}
+			
+			showDetails(dcm);
+			
+			
+			//image.setSize(imagePanel.getSize());
+			Dimension d = imagePanel.getSize();
+			int width =(int) d.getWidth();
+			int height =(int) d.getHeight();
+			System.out.println("wymiar:" + width + "x" +height);
+			BufferedImage newImage = scaleImage(image, width, height, null);
+			
+			ImageIcon icon = new ImageIcon(newImage);
+			imagePanel.setIcon(icon);
+			
 		}
-		
-		showDetails(dcm);
-		
-		
-		//image.setSize(imagePanel.getSize());
-		Dimension d = imagePanel.getSize();
-		int width =(int) d.getWidth();
-		int height =(int) d.getHeight();
-		System.out.println("wymiar:" + width + "x" +height);
-		BufferedImage newImage = scaleImage(image, width, height, null);
-		
-		ImageIcon icon = new ImageIcon(newImage);
-		imagePanel.setIcon(icon);
-		
-	}
-
-
-    private class BookInfo {
-        public String bookName;
-        public URL bookURL;
- 
-        public BookInfo(String book, String filename) {
-            bookName = book;
-            bookURL = getClass().getResource(filename);
-            if (bookURL == null) {
-                System.err.println("Couldn't find file: "
-                                   + filename);
-            }
-        }
- 
-        public String toString() {
-            return bookName;
-        }
-    }
-
-	private void createNodes(DefaultMutableTreeNode top) {
-		// TODO Auto-generated method stub
-
-	    DefaultMutableTreeNode category = null;
-	    DefaultMutableTreeNode book = null;
-	    
-	    category = new DefaultMutableTreeNode("Books for Java Programmers");
-	    top.add(category);
-	    
-	    //original Tutorial
-	    book = new DefaultMutableTreeNode(new BookInfo
-	        ("The Java Tutorial: A Short Course on the Basics",
-	        "tutorial.html"));
-	    category.add(book);
-	    
-	    //Tutorial Continued
-	    book = new DefaultMutableTreeNode(new BookInfo
-	        ("The Java Tutorial Continued: The Rest of the JDK",
-	        "tutorialcont.html"));
-	    category.add(book);
-	    
-	    //Swing Tutorial
-	    book = new DefaultMutableTreeNode(new BookInfo
-	        ("The Swing Tutorial: A Guide to Constructing GUIs",
-	        "swingtutorial.html"));
-	    category.add(book);
-
-	    //...add more books for programmers...
-
-	    category = new DefaultMutableTreeNode("Books for Java Implementers");
-	    top.add(category);
-
-	    //VM
-	    book = new DefaultMutableTreeNode(new BookInfo
-	        ("The Java Virtual Machine Specification",
-	         "vm.html"));
-	    category.add(book);
-
-	    //Language Spec
-	    book = new DefaultMutableTreeNode(new BookInfo
-	        ("The Java Language Specification",
-	         "jls.html"));
-	    category.add(book);
 	}
 	
 	
 
 
 }
-
-//http://docs.oracle.com/javase/tutorial/uiswing/components/tree.html
