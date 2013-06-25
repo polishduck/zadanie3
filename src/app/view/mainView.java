@@ -14,7 +14,10 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.Date;
 import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 
+import javax.security.auth.Destroyable;
 import javax.swing.ImageIcon;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
@@ -38,6 +41,8 @@ import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreeSelectionModel;
 import javax.imageio.*;
 
+import jj2000.j2k.util.ArrayUtil;
+
 import org.dcm4che2.data.DicomElement;
 import org.dcm4che2.data.DicomObject;
 import org.dcm4che2.data.Tag;
@@ -60,7 +65,7 @@ public class mainView extends JFrame implements TreeSelectionListener {
 	public DicomObject dcm = null;
 	public File file;
 	public File[] files;
-	public DefaultMutableTreeNode top = new DefaultMutableTreeNode("pacient");
+	public DefaultMutableTreeNode top = new DefaultMutableTreeNode("");
 	
 	public mainView(mainController mController) throws IOException{
 		setTitle("Przegladarka DICOM");
@@ -111,9 +116,10 @@ public class mainView extends JFrame implements TreeSelectionListener {
 				//		System.out.println( tag );
 						}
 					
-			//		showDetails(dcm);
-					updateUI(files);
+					showDetails(dcm);
+					
 				}
+				updateUI(files);
 			}
 		});
 		menuItem2.setAccelerator(KeyStroke.getKeyStroke( KeyEvent.VK_X, ActionEvent.CTRL_MASK));
@@ -130,8 +136,7 @@ public class mainView extends JFrame implements TreeSelectionListener {
         setVisible(true);
 	}
 
-	public BufferedImage scaleImage(BufferedImage img, int width, int height,
-	        Color background) {
+	public BufferedImage scaleImage(BufferedImage img, int width, int height, Color background) {
 	    int imgWidth = img.getWidth();
 	    int imgHeight = img.getHeight();
 	    if (imgWidth*height < imgHeight*width) {
@@ -165,8 +170,8 @@ public class mainView extends JFrame implements TreeSelectionListener {
 		Date date_birth = dcm.getDate(Tag.PatientBirthDate);
 		System.out.println("Urodzony: " + date_birth);
 		
-		String study_des = dcm.getString(Tag.StudyDescription);			
-		System.out.println("Badanie: " + study_des);
+		String study_exam = dcm.getString(Tag.StudyDescription);			
+		System.out.println("Badanie: " + study_exam);
         
 		String series_des = dcm.getString(Tag.SeriesDescription);
 		System.out.println("Seria: " + series_des);
@@ -199,7 +204,6 @@ public class mainView extends JFrame implements TreeSelectionListener {
 	
 	private void createUI() {
 
-		//DefaultMutableTreeNode top = new DefaultMutableTreeNode("pacient");
 		treeModel = new DefaultTreeModel(top);
 		tree = new JTree(treeModel);
 		
@@ -220,43 +224,47 @@ public class mainView extends JFrame implements TreeSelectionListener {
 	}
 
 	private void updateUI(File[] files2) {
+		String name = null;
 		//createTree(tree);
-		DefaultMutableTreeNode top1 = new DefaultMutableTreeNode("dziabie");
-		createNodes2(top1);
+		for (int ii=0; ii<files2.length;ii++) {
+			try {
+				dis = new DicomInputStream(files2[ii]);
+				dcm = dis.readDicomObject();
+			} catch (IOException e1) {
+				// ex
+			} finally {
+				if (dis != null) {
+					CloseUtils.safeClose(dis);
+				}
+			}
+			name = dcm.getString( Tag.PatientName);
+			
+		}
+		
+		
+		DefaultMutableTreeNode top1 = new DefaultMutableTreeNode(name);
+		treeModel.setRoot(top1);
+		createNodes(top1, files2);
 		//treeModel.nodeChanged(top1);
-		treeModel.insertNodeInto(top1, top, 0);
+		
+		//treeModel.insertNodeInto(top1, top, 0);
 		tree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
 		tree.addTreeSelectionListener(this);
 		
 	}
-	
-	private void createNodes2(DefaultMutableTreeNode top) {
-		
-		System.out.println("create node2\n");
-		// TODO Auto-generated method stub
-		DefaultMutableTreeNode study = null;
-	    DefaultMutableTreeNode series = null;
-	    DefaultMutableTreeNode img = null;
-	    
-	    study = new DefaultMutableTreeNode("*WRONG*head_3T_l_PA^brain_3T_l");
-	    top.add(study);
-	    
-	    series = new DefaultMutableTreeNode("*WRONG*t1_mpr_ns_sag");
-	    study.add(series);
-	    
-	    img = new DefaultMutableTreeNode("0001.dcm");
-	    series.add(img);
-	    
-	    img = new DefaultMutableTreeNode("0002.dcm");
-	    series.add(img);
-	    
-	    img = new DefaultMutableTreeNode("0003.dcm");
-	    series.add(img);
-	}
+
 	
 
 	private void createNodes(DefaultMutableTreeNode top, File[] files2) {
 		// TODO Auto-generated method stub
+		
+		int sizee = files2.length;
+	    DefaultMutableTreeNode img = null;
+		DefaultMutableTreeNode study = null;
+		DefaultMutableTreeNode series = null;
+	    String [] study_exam = new String[sizee];
+	    String [] series_des = new String[sizee];
+	    String [] names = new String[sizee];
 		
 		for (int ii=0; ii<files2.length;ii++) {
 			
@@ -273,26 +281,50 @@ public class mainView extends JFrame implements TreeSelectionListener {
 				}
 				
 			}
-
-	    DefaultMutableTreeNode study = null;
-	    DefaultMutableTreeNode series = null;
-	    DefaultMutableTreeNode img = null;
-	    
-	    study = new DefaultMutableTreeNode("*WRONG*head_3T_l_PA^brain_3T_l");
-	    top.add(study);
-	    
-	    series = new DefaultMutableTreeNode("*WRONG*t1_mpr_ns_sag");
-	    study.add(series);
-	    
-	    img = new DefaultMutableTreeNode("0001.dcm");
-	    series.add(img);
-	    
-	    img = new DefaultMutableTreeNode("0002.dcm");
-	    series.add(img);
-	    
-	    img = new DefaultMutableTreeNode("0003.dcm");
-	    series.add(img);
+		
+			
+			study_exam[ii] = dcm.getString(Tag.StudyDescription);			
+			series_des[ii] = dcm.getString(Tag.SeriesDescription);
+			names[ii] = files2[ii].getName();
 		}
+		//array = ArrayUtils.removeElement
+		
+	    for (int jj=0;jj<sizee;jj++) {
+	    	
+		    System.out.print("jj !! studies:" + study_exam[jj] + "\n");
+		    System.out.print("jj !! series_des:" + series_des[jj] + "\n");
+		    System.out.print("jj !! names:" + names[jj] + "\n");
+	    }
+		
+	    for (int iii1=1;iii1<sizee;iii1++) {
+	    	
+		    System.out.print("studies:" + study_exam[iii1-1] + "\n");
+		    System.out.print("series:" + series_des[iii1-1] + "\n");
+		    System.out.print("img:" + names[iii1-1] + "\n");
+		   
+		    if (iii1==1){
+		    	study = new DefaultMutableTreeNode(study_exam[iii1-1]);
+			    top.add(study);
+			    series = new DefaultMutableTreeNode(series_des[iii1-1]);
+			    study.add(series);
+		    }
+		  /*
+		    if(!(study_exam[iii-1].equals(study_exam[iii]))) {
+		    	study = new DefaultMutableTreeNode(study_exam[iii-1]);
+			    top.add(study);
+		    }
+		    if(!(series_des[iii-1].equals(series_des[iii]))) {
+			    series = new DefaultMutableTreeNode(series_des[iii-1]);
+			    study.add(series);
+			    }
+			   */
+		    
+	    }
+	
+	    for (int j=0;j<sizee;j++) {
+			img = new DefaultMutableTreeNode(names[j]);
+			series.add(img);
+	    }
 	}
 
 	@Override
@@ -305,16 +337,16 @@ public class mainView extends JFrame implements TreeSelectionListener {
 			
 			BufferedImage image = null;
 			try {
-				image = ImageIO.read(new File("/home/patryk/aaaa/T1/" + node.getUserObject().toString()));
+				image = ImageIO.read(new File("/home/jrduck/aaaa/T1/" + node.getUserObject().toString()));
 			} catch (IOException e1) {
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
 			}
 			
-			System.out.print("Opened file " + "/home/patryk/aaaa/T1/" + node.getUserObject().toString() + "\n");
+			System.out.print("Opened file " + "/home/jrduck/aaaa/T1/" + node.getUserObject().toString() + "\n");
 			
 			try {
-				dis = new DicomInputStream(new File("/home/patryk/aaaa/T1/" + node.getUserObject().toString()));
+				dis = new DicomInputStream(new File("/home/jrduck/aaaa/T1/" + node.getUserObject().toString()));
 				dcm = dis.readDicomObject();
 			} catch (IOException e1) {
 				// ex
@@ -328,19 +360,20 @@ public class mainView extends JFrame implements TreeSelectionListener {
 			showDetails(dcm);
 			
 			
+			
 			//image.setSize(imagePanel.getSize());
 			Dimension d = imagePanel.getSize();
 			int width =(int) d.getWidth();
 			int height =(int) d.getHeight();
-			System.out.println("wymiar:" + width + "x" +height);
+			System.out.println("wymiar okna:" + width + "x" +height);
 			BufferedImage newImage = scaleImage(image, width, height, null);
-			
 			ImageIcon icon = new ImageIcon(newImage);
+			
+		//	ImageIcon icon = new ImageIcon(image);
 			imagePanel.setIcon(icon);
 			
 		}
 	}
-	
 	
 
 
