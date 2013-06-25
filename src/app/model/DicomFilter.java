@@ -2,7 +2,6 @@ package app.model;
 
 
 import java.io.File;
-import javax.swing.*;
 import javax.swing.filechooser.*;
 
 public class DicomFilter extends FileFilter {

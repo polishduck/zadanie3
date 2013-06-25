@@ -1,7 +1,5 @@
 package app.model;
 
-import java.awt.List;
-
 import javax.swing.SwingWorker;
 
 public class myAppWorker extends SwingWorker<Object, Object> {

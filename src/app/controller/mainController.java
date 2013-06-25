@@ -1,7 +1,6 @@
 package app.controller;
 
 import java.awt.Dimension;
-import java.awt.MenuItem;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
@@ -14,8 +13,6 @@ import javax.swing.ImageIcon;
 import javax.swing.JFileChooser;
 import javax.swing.JMenuItem;
 import javax.swing.JTree;
-import javax.swing.SwingUtilities;
-import javax.swing.SwingWorker;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -82,11 +79,8 @@ public class mainController implements ActionListener, TreeSelectionListener {
 					while ( iter.hasNext() ) {
 						DicomElement tag = iter.next();
 				// print dicom tag
-				//		System.out.println( tag );
-						}
-					
-					//showDetails(dcm);
-					
+						System.out.println( tag );
+						}					
 				}
 				mainView.updateUI(files,this);
 			}
@@ -103,22 +97,23 @@ public class mainController implements ActionListener, TreeSelectionListener {
 		// TODO Auto-generated method stub
 		DefaultMutableTreeNode node = (DefaultMutableTreeNode)mainView.tree.getLastSelectedPathComponent();
 		if (node == null) return;
-		Object nodeInfo = node.getUserObject();
 		if (node.isLeaf()) {
-			int a = clicked_index(mainView.tree, node);
+			String a = clicked_index(mainView.tree, node);
+			//TreeNode parent = node.getParent();
+		    //int a = parent.getIndex(node);
 			System.out.println("click na itemie:" +  a);
 			BufferedImage image = null;
 			try {
-				image = ImageIO.read(new File(files[a].getAbsolutePath()));
+				image = ImageIO.read(new File(files[0].getAbsolutePath()));
 			} catch (IOException e1) {
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
 			}
 			
-			System.out.print("Opened file " + files[a].getAbsolutePath() + "\n");
+			System.out.print("Opened file " + files[0].getAbsolutePath() + "\n");
 			
 			try {
-				dis = new DicomInputStream(new File(files[a].getAbsolutePath()));
+				dis = new DicomInputStream(new File(files[0].getAbsolutePath()));
 				dcm = dis.readDicomObject();
 			} catch (IOException e1) {
 				// ex
@@ -144,7 +139,7 @@ public class mainController implements ActionListener, TreeSelectionListener {
 			
 		}
 	}
-
+/*
 	private int clicked_index(JTree tree, DefaultMutableTreeNode node) {
 		   TreeNode root = (TreeNode) tree.getModel().getRoot();
 		    if (node == root) {
@@ -159,5 +154,24 @@ public class mainController implements ActionListener, TreeSelectionListener {
 		        return -1;
 		    }
 		    return parent.getIndex(node);
+	}
+	*/
+	int count = 0;
+	private String clicked_index(JTree tree, DefaultMutableTreeNode node) {
+	    TreeNode root = (TreeNode) tree.getModel().getRoot();
+	    if (node == root) {
+	    	count++;
+	        return "0";
+	    }
+	    TreeNode parent = node.getParent();
+	    if (parent == null) {
+	        return null;
+	    }
+	    String parentIndex= clicked_index(tree, (DefaultMutableTreeNode)parent);
+	    if (parentIndex == null) {
+	        return null;
+	    }
+	    //return parentIndex;//+"."+parent.getIndex(node);
+	    return "x)" + (parent.getIndex(node) + count*2);
 	}
 }

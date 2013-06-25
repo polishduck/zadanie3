@@ -2,49 +2,22 @@ package app.view;
 
 import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.Graphics2D;
-import java.awt.RenderingHints;
-
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
-import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.net.URL;
 import java.util.Date;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-
-import javax.security.auth.Destroyable;
-import javax.swing.ImageIcon;
-import javax.swing.JFileChooser;
 import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JList;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
-import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTree;
 import javax.swing.KeyStroke;
-import javax.swing.ListSelectionModel;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
-import javax.swing.event.TreeSelectionEvent;
-import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
-import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
-import javax.imageio.*;
-
-import jj2000.j2k.util.ArrayUtil;
-
-import org.dcm4che2.data.DicomElement;
 import org.dcm4che2.data.DicomObject;
 import org.dcm4che2.data.Tag;
 import org.dcm4che2.io.DicomInputStream;
@@ -53,12 +26,11 @@ import org.dcm4che2.util.CloseUtils;
 import app.controller.mainController;
 import app.model.*;
 
+@SuppressWarnings("serial")
 public class mainView extends JFrame {
 	
 	public static JTree tree=null;
-	private JTree tree2=null;
-	private static DefaultTreeModel treeModel ;
-	//private String[] imageList= {"1","2"};
+	public static DefaultTreeModel treeModel ;
 	public static imagePanel imagePanel; 
 	public JSplitPane splitPane;
 	public listPanel listScrollPane;
@@ -221,6 +193,7 @@ public class mainView extends JFrame {
 
 	}
 	*/
+	@SuppressWarnings("unused")
 	private void showDetails(DicomObject dcm) {
 		// TODO Auto-generated method stub
 		
