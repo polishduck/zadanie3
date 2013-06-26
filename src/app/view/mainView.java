@@ -134,10 +134,26 @@ public class mainView extends JFrame {
 				
 			}
 		
-			names[ii] = dcm.getString( Tag.PatientName);
-			study_exam[ii] = dcm.getString(Tag.StudyDescription);			
-			series_des[ii] = dcm.getString(Tag.SeriesDescription);
-			file_names[ii] = files2[ii].getName();
+			if (dcm.getString( Tag.PatientName) == null) {
+				names[ii] = "<unknown>#" + new Integer(ii).toString();
+			}
+			else
+				names[ii] = dcm.getString( Tag.PatientName); 
+		
+			if (dcm.getString( Tag.StudyDescription) == null) {
+				study_exam[ii] = "<study>#" + new Integer(ii).toString();
+			}
+			else
+				study_exam[ii] = dcm.getString(Tag.StudyDescription);	
+			
+			if (dcm.getString( Tag.SeriesDescription) == null) {
+				series_des[ii] = "<Series>#" + new Integer(ii).toString();
+			}
+			else
+				series_des[ii] = dcm.getString(Tag.SeriesDescription);
+			
+			String[] aa = files2[ii].getName().split("\\.");
+			file_names[ii] = aa[0];
 		}
 		
 	    for (int iii1=0;iii1<sizee;iii1++) {
@@ -186,13 +202,6 @@ public class mainView extends JFrame {
 	    }
 
 	}
-/*
-	@Override
-	public void valueChanged(TreeSelectionEvent e) {
-		// TODO Auto-generated method stub
-
-	}
-	*/
 	@SuppressWarnings("unused")
 	private void showDetails(DicomObject dcm) {
 		// TODO Auto-generated method stub

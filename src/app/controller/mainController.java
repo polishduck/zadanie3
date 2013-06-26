@@ -1,17 +1,25 @@
 package app.controller;
 
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.Iterator;
 
 import javax.imageio.ImageIO;
+import javax.imageio.ImageReader;
+import javax.imageio.stream.FileImageInputStream;
 import javax.swing.ImageIcon;
 import javax.swing.JFileChooser;
+import javax.swing.JLabel;
 import javax.swing.JMenuItem;
+import javax.swing.JTextArea;
 import javax.swing.JTree;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
@@ -20,8 +28,13 @@ import javax.swing.tree.TreeNode;
 
 import org.dcm4che2.data.DicomElement;
 import org.dcm4che2.data.DicomObject;
+import org.dcm4che2.data.Tag;
+import org.dcm4che2.imageioimpl.plugins.dcm.DicomImageReader;
 import org.dcm4che2.io.DicomInputStream;
+import org.dcm4che2.tool.jpg2dcm.Jpg2Dcm;
 import org.dcm4che2.util.CloseUtils;
+
+import sun.util.resources.CalendarData;
 
 
 import app.view.*;
@@ -34,6 +47,7 @@ public class mainController implements ActionListener, TreeSelectionListener {
 	public DicomInputStream dis = null;
 	public DicomObject dcm = null;
 	public JFileChooser fc = null;
+	public patientData pData;
 
 	public mainController() throws IOException {
 		myView = new mainView(this);
@@ -75,6 +89,7 @@ public class mainController implements ActionListener, TreeSelectionListener {
 						}
 						
 					}
+
 					Iterator<DicomElement> iter = dcm.datasetIterator();
 					while ( iter.hasNext() ) {
 						DicomElement tag = iter.next();
@@ -98,22 +113,26 @@ public class mainController implements ActionListener, TreeSelectionListener {
 		DefaultMutableTreeNode node = (DefaultMutableTreeNode)mainView.tree.getLastSelectedPathComponent();
 		if (node == null) return;
 		if (node.isLeaf()) {
-			String a = clicked_index(mainView.tree, node);
-			//TreeNode parent = node.getParent();
-		    //int a = parent.getIndex(node);
-			System.out.println("click na itemie:" +  a);
-			BufferedImage image = null;
-			try {
-				image = ImageIO.read(new File(files[0].getAbsolutePath()));
-			} catch (IOException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
+			//String a = clicked_index(mainView.tree, node);
+	
+			String aa = node.getUserObject().toString();
+			String a = aa + ".dcm";
+			int index = 0;	
+			
+			for (int i=0; i<files.length;i++) {
+				if (files[i].getName().equals(a)) {
+					index = i;
+				}
 			}
-			
-			System.out.print("Opened file " + files[0].getAbsolutePath() + "\n");
+				
+			//TreeNode parent = node.getParent();
+
+			System.out.println("click na itemie nr:" +  index + " i nazwie" + a);
+	
+			System.out.print("Opened file " + files[index].getAbsolutePath() + "\n");
 			
 			try {
-				dis = new DicomInputStream(new File(files[0].getAbsolutePath()));
+				dis = new DicomInputStream(new File(files[index].getAbsolutePath()));
 				dcm = dis.readDicomObject();
 			} catch (IOException e1) {
 				// ex
@@ -124,54 +143,43 @@ public class mainController implements ActionListener, TreeSelectionListener {
 				
 			}
 			
-			//showDetails(dcm);
+			String name = dcm.getString( Tag.PatientName);
+			Date birth = dcm.getDate(Tag.PatientBirthDate);
+			Calendar date_birth = Calendar.getInstance();
+			if (birth !=null) {
+				date_birth.set(Calendar.DATE, birth.getDay());
+				date_birth.set(Calendar.MONTH, birth.getMonth());
+				date_birth.set(Calendar.YEAR, birth.getYear()+1900);
+					
+			}
+			String study_type = dcm.getString(Tag.Modality);
+
+			pData = new patientData(name, date_birth, study_type);
 			
-			//image.setSize(imagePanel.getSize());
+			FileImageInputStream fiis;
+			BufferedImage image = null;
+			
+			try {
+				fiis = new FileImageInputStream(new File(files[index].getAbsolutePath()));
+				image = ImageIO.read(fiis);   //(fiis);
+			} catch (FileNotFoundException e2) {
+				// TODO Auto-generated catch block
+				e2.printStackTrace();
+			} catch (IOException e2) {
+				// TODO Auto-generated catch block
+				e2.printStackTrace();
+			}
+
 			Dimension d = mainView.imagePanel.getSize();
 			int width =(int) d.getWidth();
 			int height =(int) d.getHeight();
 			System.out.println("wymiar okna:" + width + "x" +height);
 			BufferedImage newImage = mainView.imagePanel.scaleImage(image, width, height, null);
-			ImageIcon icon = new ImageIcon(newImage);
-			
-		//	ImageIcon icon = new ImageIcon(image);
+			BufferedImage newImage2 = mainView.imagePanel.process(newImage, pData);
+			ImageIcon icon = new ImageIcon(newImage2);
 			mainView.imagePanel.setIcon(icon);
-			
+
 		}
 	}
-/*
-	private int clicked_index(JTree tree, DefaultMutableTreeNode node) {
-		   TreeNode root = (TreeNode) tree.getModel().getRoot();
-		    if (node == root) {
-		        return 0;
-		    }
-		    TreeNode parent = node.getParent();
-		    if (parent == null) {
-		        return -1;
-		    }
-		    int parentIndex= clicked_index(tree, (DefaultMutableTreeNode)parent);
-		    if (parentIndex == 0) {
-		        return -1;
-		    }
-		    return parent.getIndex(node);
-	}
-	*/
-	int count = 0;
-	private String clicked_index(JTree tree, DefaultMutableTreeNode node) {
-	    TreeNode root = (TreeNode) tree.getModel().getRoot();
-	    if (node == root) {
-	    	count++;
-	        return "0";
-	    }
-	    TreeNode parent = node.getParent();
-	    if (parent == null) {
-	        return null;
-	    }
-	    String parentIndex= clicked_index(tree, (DefaultMutableTreeNode)parent);
-	    if (parentIndex == null) {
-	        return null;
-	    }
-	    //return parentIndex;//+"."+parent.getIndex(node);
-	    return "x)" + (parent.getIndex(node) + count*2);
-	}
+
 }
