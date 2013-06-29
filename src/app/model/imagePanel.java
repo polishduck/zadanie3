@@ -8,11 +8,7 @@ import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.util.Calendar;
-import java.util.Date;
-
 import javax.swing.JLabel;
-
-import sun.util.resources.CalendarData;
 
 @SuppressWarnings("serial")
 public class imagePanel extends JLabel{

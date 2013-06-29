@@ -1,15 +1,12 @@
 package app.model;
 
 import java.util.Calendar;
-import java.util.Date;
-
-import sun.util.resources.CalendarData;
 
 public class patientData {
 
 	private String fullname;
-	private String name;
-	private String surname;
+	//private String name;
+	//private String surname;
 	private Calendar birth;
 	private String modality;
 

@@ -1,6 +1,5 @@
 package app.controller;
 
-import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -13,29 +12,18 @@ import java.util.Date;
 import java.util.Iterator;
 
 import javax.imageio.ImageIO;
-import javax.imageio.ImageReader;
 import javax.imageio.stream.FileImageInputStream;
 import javax.swing.ImageIcon;
 import javax.swing.JFileChooser;
-import javax.swing.JLabel;
 import javax.swing.JMenuItem;
-import javax.swing.JTextArea;
-import javax.swing.JTree;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.TreeNode;
-
 import org.dcm4che2.data.DicomElement;
 import org.dcm4che2.data.DicomObject;
 import org.dcm4che2.data.Tag;
-import org.dcm4che2.imageioimpl.plugins.dcm.DicomImageReader;
 import org.dcm4che2.io.DicomInputStream;
-import org.dcm4che2.tool.jpg2dcm.Jpg2Dcm;
 import org.dcm4che2.util.CloseUtils;
-
-import sun.util.resources.CalendarData;
-
 
 import app.view.*;
 import app.model.*;
@@ -107,6 +95,7 @@ public class mainController implements ActionListener, TreeSelectionListener {
 		}
 	}
 
+	@SuppressWarnings("deprecation")
 	@Override
 	public void valueChanged(TreeSelectionEvent e) {
 		// TODO Auto-generated method stub
